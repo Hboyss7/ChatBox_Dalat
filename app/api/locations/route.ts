@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { verifyRequestAuth } from '@/lib/authServer';
-import { getAdminDb } from '@/lib/firebaseAdmin';
 import { fail, ok } from '@/lib/http';
+import { getLocationCollectionWithData } from '@/lib/repos/locationsRepo';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
@@ -37,8 +37,7 @@ export async function GET(request: NextRequest) {
         }
 
         const limit = parseLimit(request.nextUrl.searchParams.get('limit'));
-        const adminDb = getAdminDb();
-        const snapshot = await adminDb.collection('dalat_locations').limit(limit).get();
+        const { snapshot } = await getLocationCollectionWithData(limit);
 
         const locations = snapshot.docs.map((doc) => ({
             locationId: doc.id,

@@ -1,5 +1,5 @@
-import { getAdminDb } from '@/lib/firebaseAdmin';
 import { createEmbedding, normalizeEmbeddingText } from '@/lib/embeddings';
+import { getLocationCollectionWithData } from '@/lib/repos/locationsRepo';
 
 type LocationDoc = {
     locationId: string;
@@ -92,8 +92,7 @@ export async function retrieveTopLocationsByQuery(query: string, topK = 5) {
 }
 
 export async function retrieveTopLocationsByEmbedding(queryEmbedding: number[], query: string, topK = 5) {
-    const adminDb = getAdminDb();
-    const snapshot = await adminDb.collection('dalat_locations').limit(MAX_LOCATION_SCAN).get();
+    const { snapshot } = await getLocationCollectionWithData(MAX_LOCATION_SCAN);
 
     const ranked: RetrievedLocation[] = [];
 

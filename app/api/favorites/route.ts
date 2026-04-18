@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { verifyRequestAuth } from '@/lib/authServer';
 import { getAdminDb } from '@/lib/firebaseAdmin';
 import { fail, ok } from '@/lib/http';
+import { getLocationsByIds } from '@/lib/repos/locationsRepo';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
@@ -82,26 +83,7 @@ export async function GET(request: NextRequest) {
             })
             .filter((item) => item.placeId.length > 0);
 
-        const placeSnapshots = await Promise.all(
-            favorites.map((favorite) =>
-                adminDb
-                    .collection('dalat_locations')
-                    .doc(favorite.placeId)
-                    .get(),
-            ),
-        );
-
-        const placesById = new Map(
-            placeSnapshots
-                .filter((doc) => doc.exists)
-                .map((doc) => [
-                    doc.id,
-                    {
-                        locationId: doc.id,
-                        ...(doc.data() ?? {}),
-                    },
-                ]),
-        );
+        const placesById = await getLocationsByIds(favorites.map((favorite) => favorite.placeId));
 
         const result = favorites
             .map((favorite) => ({

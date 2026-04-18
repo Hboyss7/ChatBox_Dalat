@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { verifyRequestAuth } from '@/lib/authServer';
 import { getAdminDb } from '@/lib/firebaseAdmin';
 import { fail, ok } from '@/lib/http';
+import { getLocationDocById } from '@/lib/repos/locationsRepo';
 
 const toggleFavoriteSchema = z.object({
     placeId: z.string().min(1).max(160),
@@ -38,10 +39,9 @@ export async function POST(request: NextRequest) {
 
         const placeId = parsed.data.placeId.trim();
         const adminDb = getAdminDb();
-        const placeRef = adminDb.collection('dalat_locations').doc(placeId);
-        const placeSnapshot = await placeRef.get();
+        const place = await getLocationDocById(placeId);
 
-        if (!placeSnapshot.exists) {
+        if (!place) {
             return fail('Place not found.', 404);
         }
 

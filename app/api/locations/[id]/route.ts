@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { verifyRequestAuth } from '@/lib/authServer';
-import { getAdminDb } from '@/lib/firebaseAdmin';
 import { fail, ok } from '@/lib/http';
+import { getLocationDocById } from '@/lib/repos/locationsRepo';
 
 type RouteContext = {
     params: Promise<{
@@ -31,18 +31,16 @@ export async function GET(request: NextRequest, context: RouteContext) {
             return fail('Missing location id in route params.', 400);
         }
 
-        const adminDb = getAdminDb();
-        const locationRef = adminDb.collection('dalat_locations').doc(id);
-        const snapshot = await locationRef.get();
+        const location = await getLocationDocById(id);
 
-        if (!snapshot.exists) {
+        if (!location) {
             return fail('Location not found.', 404);
         }
 
         return ok({
             location: {
-                locationId: snapshot.id,
-                ...(snapshot.data() ?? {}),
+                locationId: location.doc.id,
+                ...(location.doc.data() ?? {}),
             },
         });
     } catch (error: unknown) {
