@@ -11,6 +11,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@langchain/core": "^1.1.35",
+    "dotenv": "^17.4.2",
     "firebase-admin": "^13.7.0",
     "langchain": "^1.2.36",
     "next": "16.2.1",
