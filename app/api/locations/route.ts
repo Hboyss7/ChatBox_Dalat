@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { verifyRequestAuth } from '@/lib/authServer';
 import { fail, ok } from '@/lib/http';
 import { getLocationCollectionWithData } from '@/lib/repos/locationsRepo';
+import { getSeedLocations } from '@/lib/seedLocations';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
@@ -30,19 +30,15 @@ function getErrorMessage(error: unknown) {
 
 export async function GET(request: NextRequest) {
     try {
-        const auth = await verifyRequestAuth(request);
-
-        if (!auth) {
-            return fail('Unauthorized: missing or invalid bearer token.', 401);
-        }
-
         const limit = parseLimit(request.nextUrl.searchParams.get('limit'));
         const { snapshot } = await getLocationCollectionWithData(limit);
 
-        const locations = snapshot.docs.map((doc) => ({
-            locationId: doc.id,
-            ...(doc.data() ?? {}),
-        }));
+        const locations = snapshot.empty
+            ? (await getSeedLocations()).slice(0, limit)
+            : snapshot.docs.map((doc) => ({
+                locationId: doc.id,
+                ...(doc.data() ?? {}),
+            }));
 
         return ok({ locations });
     } catch (error: unknown) {

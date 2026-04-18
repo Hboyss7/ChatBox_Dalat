@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { verifyRequestAuth } from '@/lib/authServer';
 import { fail, ok } from '@/lib/http';
 import { getLocationDocById } from '@/lib/repos/locationsRepo';
+import { getSeedLocationById } from '@/lib/seedLocations';
 
 type RouteContext = {
     params: Promise<{
@@ -19,12 +19,6 @@ function getErrorMessage(error: unknown) {
 
 export async function GET(request: NextRequest, context: RouteContext) {
     try {
-        const auth = await verifyRequestAuth(request);
-
-        if (!auth) {
-            return fail('Unauthorized: missing or invalid bearer token.', 401);
-        }
-
         const { id } = await context.params;
 
         if (!id) {
@@ -33,16 +27,22 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
         const location = await getLocationDocById(id);
 
-        if (!location) {
+        if (location) {
+            return ok({
+                location: {
+                    locationId: location.doc.id,
+                    ...(location.doc.data() ?? {}),
+                },
+            });
+        }
+
+        const seedLocation = await getSeedLocationById(id);
+
+        if (!seedLocation) {
             return fail('Location not found.', 404);
         }
 
-        return ok({
-            location: {
-                locationId: location.doc.id,
-                ...(location.doc.data() ?? {}),
-            },
-        });
+        return ok({ location: seedLocation });
     } catch (error: unknown) {
         console.error('[API Error] tại /api/locations/[id] [GET]:', error);
         return fail(getErrorMessage(error), 500);
